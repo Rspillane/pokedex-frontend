@@ -54,8 +54,7 @@ const availableTypes = ref([])
 
 const selectedPokemon = ref(null)
 
-const API_URL = 'http://localhost:3000/api/pokemon'  // Backend basic list
-
+const API_URL = `${import.meta.env.VITE_API_URL}/api/pokemon`;
 // Fetch the basic list of Pokémon (name, sprite, types)
 const fetchPokemons = async () => {
   try {
@@ -78,7 +77,7 @@ const fetchPokemons = async () => {
 
 // Fetch full details for selected Pokémon when clicked
 async function selectPokemon(name) {
-  const response = await fetch(`http://localhost:3000/api/pokemon/${name}`);
+  const response = await fetch(`${API_URL}${name}`);
   const data = await response.json();
   selectedPokemon.value = data;
 }
