@@ -77,7 +77,7 @@ const fetchPokemons = async () => {
 
 // Fetch full details for selected Pokémon when clicked
 async function selectPokemon(name) {
-  const response = await fetch(`${API_URL}${name}`);
+  const response = await fetch(`${API_URL}/${name}`);
   const data = await response.json();
   selectedPokemon.value = data;
 }
