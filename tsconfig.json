@@ -1,16 +1,16 @@
 {
+ 
   "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
-    "moduleResolution": "node",
-    "strict": true,
-    "jsx": "preserve",
-    "sourceMap": true,
+       "module": "ESNext",
+    "target": "ESNext",
+    "moduleResolution": "Node",
     "resolveJsonModule": true,
+    "isolatedModules": true,
     "esModuleInterop": true,
-    "lib": ["esnext", "dom"],
-    "types": ["vue", "@vue/runtime-core"]
+    "jsx": "preserve",
+    "lib": ["ESNext", "DOM"],
+     "types" : ["vue", "@vue/runtime-core"],
   },
-  "include": ["src/**/*.ts", "src/**/*.vue", "src/**/*.tsx", "src/**/*.jsx"],
-  "exclude": ["node_modules"]
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.vue"]
+
 }
