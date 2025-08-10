@@ -2,16 +2,23 @@
   <div class="layout-container">
     <div :class="['main-content', { 'sidebar-open': selectedPokemon }]">
 
+      <!-- Controls -->
       <div class="controls">
+        <div class="pagination">
+          <button :disabled="currentPage === 1" @click="changePage(currentPage - 1)">Prev</button>
+          <span>Page {{ currentPage }} of {{ totalPages }}</span>
+          <button :disabled="currentPage === totalPages" @click="changePage(currentPage + 1)">Next</button>
+        </div>
 
-      <img src="../assets/png-pokemon-logo.png" alt="Pokémon Logo" class="logo" />
+        <img src="../assets/png-pokemon-logo.png" alt="Pokémon Logo" class="logo" />
+
         <input
           type="text"
           v-model="searchQuery"
           placeholder="Search Pokémon"
         />
 
-        <select v-model="selectedType" >
+        <select v-model="selectedType">
           <option value="">All Types</option>
           <option v-for="type in availableTypes" :key="type" :value="type">
             {{ capitalize(type) }}
@@ -19,11 +26,13 @@
         </select>
       </div>
 
+      <!-- Loading -->
       <div v-if="loading">Loading Pokémon...</div>
 
+      <!-- Pokémon Grid -->
       <div v-else class="pokedex-grid">
         <div
-          v-for="pokemon in filteredPokemons"
+          v-for="pokemon in paginatedPokemons"
           :key="pokemon.id"
           class="pokemon-card"
           @click="selectPokemon(pokemon.name)"
@@ -35,6 +44,7 @@
       </div>
     </div>
 
+    <!-- Sidebar -->
     <div :class="['sidebar', { 'sidebar-open': selectedPokemon }]" v-if="selectedPokemon">
       <PokemonSidebar :pokemon="selectedPokemon" @close="selectedPokemon = null" />
     </div>
@@ -46,28 +56,63 @@
 import { ref, computed, onMounted } from 'vue'
 import PokemonSidebar from './PokemonSidebar.vue'
 
-const pokemons = ref([])
-const loading = ref(true)
+const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1)
+
+const allPokemons = ref([])
 const searchQuery = ref('')
 const selectedType = ref('')
-const availableTypes = ref([])
-
+const currentPage = ref(1)
+const limit = 25
+const loading = ref(true)
 const selectedPokemon = ref(null)
 
-const API_URL = `${import.meta.env.VITE_API_URL}/api/pokemon`;
-// Fetch the basic list of Pokémon (name, sprite, types)
-const fetchPokemons = async () => {
-  try {
-    const response = await fetch(API_URL)
-    const data = await response.json()
-    pokemons.value = data
 
-    // Extract unique types for filter dropdown
-    const typesSet = new Set()
-    data.forEach(pokemon => {
-      pokemon.types.forEach(type => typesSet.add(type))
-    })
-    availableTypes.value = Array.from(typesSet).sort()
+const availableTypes = computed(() => {
+  const typesSet = new Set()
+  allPokemons.value.forEach(p => {
+    p.types.forEach(t => typesSet.add(t))
+  })
+  return Array.from(typesSet).sort()
+})
+
+
+// Filter allPokemons (no slicing yet)
+const filteredAllPokemons = computed(() => {
+  return allPokemons.value.filter(pokemon => {
+    const matchesName = pokemon.name.toLowerCase().includes(searchQuery.value.toLowerCase())
+    const matchesType = selectedType.value === '' || pokemon.types.includes(selectedType.value)
+    return matchesName && matchesType
+  })
+})
+
+// Slice only for the visible page
+const paginatedPokemons = computed(() => {
+  const start = (currentPage.value - 1) * limit
+  const end = currentPage.value * limit
+  return filteredAllPokemons.value.slice(start, end)
+})
+
+// Correct totalPages — use full filtered list length
+const totalPages = computed(() => {
+  return Math.ceil(filteredAllPokemons.value.length / limit)
+})
+
+const API_URL = import.meta.env.VITE_API_URL
+
+// Fetch all Pokémon from backend
+const fetchPokemons = async () => {
+  loading.value = true
+  try {
+    const response = await fetch(`${API_URL}/api/pokemon`)
+    const data = await response.json()
+
+    // ✅ If backend returns { results: [...], total: 150 }
+    if (data.results) {
+      allPokemons.value = data.results
+    } else {
+      // ✅ If backend just returns an array
+      allPokemons.value = data
+    }
   } catch (err) {
     console.error('Error fetching Pokémon:', err)
   } finally {
@@ -75,29 +120,26 @@ const fetchPokemons = async () => {
   }
 }
 
-// Fetch full details for selected Pokémon when clicked
-async function selectPokemon(name) {
-  const response = await fetch(`${API_URL}/${name}`);
-  const data = await response.json();
-  selectedPokemon.value = data;
+function changePage(newPage) {
+  if (newPage >= 1 && newPage <= totalPages.value) {
+    currentPage.value = newPage
+  }
 }
 
-const filteredPokemons = computed(() => {
-  return pokemons.value.filter(pokemon => {
-    const matchesName = pokemon.name.toLowerCase().includes(searchQuery.value.toLowerCase());
-    const matchesType = selectedType.value === '' || pokemon.types.includes(selectedType.value);
-    return matchesName && matchesType;
-  });
-});
+async function selectPokemon(name) {
+  try {
+    const res = await fetch(`${API_URL}/api/pokemon/${name}`)
+    const data = await res.json()
+    selectedPokemon.value = data
+  } catch (err) {
+    console.error('Error fetching details:', err)
+  }
+}
 
 
-const capitalize = (str) => str.charAt(0).toUpperCase() + str.slice(1)
-
-onMounted(() => {
-  fetchPokemons()
-  
-})
+onMounted(fetchPokemons)
 </script>
+
 
 
 <style scoped>

@@ -4,18 +4,13 @@
 
     <div v-if="pokemon" class="pokemon-details">
       <h2>{{ capitalize(pokemon.name) }}</h2>
-      <img :src="pokemon.sprites" :alt="pokemon.name" />
+      <img :src="pokemon.sprite" :alt="pokemon.name" />
 
       <div class="info-grid">
         <p><strong>Height:</strong> {{ pokemon.height }} m</p>
         <p><strong>Weight:</strong> {{ pokemon.weight }} kg</p>
-        <p><strong>Habitat:</strong> {{ capitalize(pokemon.habitat) }}</p>
+        <!-- <p><strong>Habitat:</strong> {{ capitalize(pokemon.habitat) }}</p> -->
         <p><strong>Types:</strong> {{ pokemon.types.join(', ') }}</p>
-      </div>
-
-      <div class="evolution-chain">
-        <h3>Evolution Chain</h3>
-        <p>{{ pokemon.evolutionChain.join(' → ') }}</p>
       </div>
     </div>
   </div>
